@@ -8,6 +8,7 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from "recharts";
+import { useTheme } from "next-themes";
 import type { ChartPoint } from "@/app/(app)/habits/[id]/page";
 
 interface TooltipProps {
@@ -33,12 +34,18 @@ interface Props {
 }
 
 export function Last30DaysChart({ data }: Props) {
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
+  const checkedColor = isDark ? "#f59e0b" : "#d97706";
+  const uncheckedColor = isDark ? "#44403c" : "#e7e5e4";
+  const tickColor = isDark ? "#a8a29e" : "#78716c";
+
   return (
     <ResponsiveContainer width="100%" height={100}>
       <BarChart data={data} margin={{ top: 4, right: 0, bottom: 0, left: 0 }} barCategoryGap="20%">
         <XAxis
           dataKey="displayDate"
-          tick={{ fontSize: 10, fill: "#78716c" }}
+          tick={{ fontSize: 10, fill: tickColor }}
           tickLine={false}
           axisLine={false}
           interval={4}
@@ -51,7 +58,7 @@ export function Last30DaysChart({ data }: Props) {
           {data.map((entry, i) => (
             <Cell
               key={i}
-              fill={entry.checked ? "#d97706" : "#e7e5e4"}
+              fill={entry.checked ? checkedColor : uncheckedColor}
             />
           ))}
         </Bar>

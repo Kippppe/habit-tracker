@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { ChevronLeft, ChevronRight, Check, Plus } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -32,17 +32,20 @@ function checkInsKey(start: string, end: string) {
 
 interface DayCellProps {
   habitId: string;
+  habitName: string;
   date: string;
   checked: boolean;
   onToggle: (habitId: string, date: string, checked: boolean) => void;
 }
 
-function DayCell({ habitId, date, checked, onToggle }: DayCellProps) {
+function DayCell({ habitId, habitName, date, checked, onToggle }: DayCellProps) {
+  const prefersReducedMotion = useReducedMotion();
+
   return (
     <motion.button
-      whileTap={{ scale: 0.92 }}
+      whileTap={prefersReducedMotion ? {} : { scale: 0.92 }}
       onClick={() => onToggle(habitId, date, checked)}
-      aria-label={checked ? "チェック解除" : "チェック"}
+      aria-label={`${habitName} - ${date} - ${checked ? "完了" : "未完了"}`}
       aria-pressed={checked}
       className={cn(
         "w-10 h-10 md:w-12 md:h-12 rounded-lg flex items-center justify-center shrink-0 transition-colors",
@@ -55,10 +58,10 @@ function DayCell({ habitId, date, checked, onToggle }: DayCellProps) {
         {checked && (
           <motion.div
             key="check"
-            initial={{ scale: 0.4, opacity: 0 }}
+            initial={prefersReducedMotion ? false : { scale: 0.4, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.4, opacity: 0 }}
-            transition={{ duration: 0.15 }}
+            exit={prefersReducedMotion ? {} : { scale: 0.4, opacity: 0 }}
+            transition={{ duration: prefersReducedMotion ? 0 : 0.15 }}
           >
             <Check size={16} strokeWidth={3} />
           </motion.div>
@@ -92,11 +95,11 @@ function SectionHeader({
   const pct = total === 0 ? 0 : Math.round((done / total) * 100);
 
   return (
-    <div className="flex items-center gap-2 pt-5 pb-1 sticky left-0">
+    <div role="heading" aria-level={2} className="flex items-center gap-2 pt-5 pb-1 sticky left-0">
       <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         {category || "未分類"}
       </span>
-      <span className="text-xs text-muted-foreground">—</span>
+      <span className="text-xs text-muted-foreground" aria-hidden>—</span>
       <span className="text-xs text-muted-foreground">
         直近7日 <span className="tabular-nums font-medium">{pct}%</span>
       </span>
@@ -327,6 +330,7 @@ export function HabitGrid({
                         <DayCell
                           key={date}
                           habitId={habit.id}
+                          habitName={habit.name}
                           date={date}
                           checked={checked}
                           onToggle={handleToggle}
