@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, Check, Plus } from "lucide-react";
@@ -8,6 +9,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { getDayHeader } from "@/utils/date";
 import { upsertCheckIn, deleteCheckIn } from "@/app/today/actions";
+import { enqueueCheckIn, flushQueue } from "@/lib/offline-queue";
 import type { Habit, CheckIn } from "@/lib/types/database";
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -113,6 +115,14 @@ export function HabitGrid({
 }: Props) {
   const router = useRouter();
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const handleOnline = () => {
+      flushQueue().catch(console.error);
+    };
+    window.addEventListener("online", handleOnline);
+    return () => window.removeEventListener("online", handleOnline);
+  }, []);
   const startDate = days[0];
   const endDate = days[6];
   const qKey = checkInsKey(startDate, endDate);
@@ -145,6 +155,11 @@ export function HabitGrid({
       date: string;
       checked: boolean;
     }) => {
+      const action = checked ? "delete" : "upsert";
+      if (!navigator.onLine) {
+        await enqueueCheckIn(habitId, date, action);
+        return;
+      }
       if (checked) {
         await deleteCheckIn(habitId, date);
       } else {
