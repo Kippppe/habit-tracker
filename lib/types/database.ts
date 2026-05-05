@@ -43,6 +43,7 @@ export interface Database {
           created_at?: string;
           archived_at?: string | null;
         };
+        Relationships: [];
       };
       check_ins: {
         Row: {
@@ -69,6 +70,7 @@ export interface Database {
           note?: string | null;
           created_at?: string;
         };
+        Relationships: [];
       };
     };
     Views: Record<string, never>;
