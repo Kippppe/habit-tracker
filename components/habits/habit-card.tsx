@@ -2,6 +2,7 @@
 
 import { useTransition } from "react";
 import { Pencil, Archive, RotateCcw } from "lucide-react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { HabitFormDialog } from "@/components/habits/habit-form-dialog";
 import { archiveHabit, restoreHabit } from "@/app/habits/actions";
@@ -52,7 +53,12 @@ export function HabitCard({ habit, archived = false }: Props) {
       />
 
       <div className="flex-1 min-w-0">
-        <p className="font-medium text-foreground truncate">{habit.name}</p>
+        <Link
+          href={`/habits/${habit.id}`}
+          className="font-medium text-foreground truncate hover:text-primary transition-colors block"
+        >
+          {habit.name}
+        </Link>
         <p className="text-xs text-muted-foreground mt-0.5">
           {FREQUENCY_LABEL[habit.target_per_week] ?? `週${habit.target_per_week}日`}
           {" · "}
