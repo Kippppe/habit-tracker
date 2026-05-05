@@ -1,100 +1,95 @@
-import { toJSTDateStr } from "@/utils/date";
+import { parseISO, format, subDays, subWeeks, startOfWeek } from "date-fns";
 
-const TZ = "Asia/Tokyo";
-
-function prevDay(dateStr: string): string {
-  const d = new Date(dateStr + "T00:00:00Z");
-  d.setUTCDate(d.getUTCDate() - 1);
-  return d.toISOString().slice(0, 10);
+function toDate(dateStr: string): Date {
+  return parseISO(dateStr);
 }
 
-function weekStartStr(dateStr: string): string {
-  const d = new Date(dateStr + "T00:00:00Z");
-  const dow = d.getUTCDay();
-  const daysToMon = dow === 0 ? -6 : 1 - dow;
-  const mon = new Date(d);
-  mon.setUTCDate(d.getUTCDate() + daysToMon);
-  return mon.toISOString().slice(0, 10);
+function toStr(date: Date): string {
+  return format(date, "yyyy-MM-dd");
 }
 
-function prevWeekStart(ws: string): string {
-  const d = new Date(ws + "T00:00:00Z");
-  d.setUTCDate(d.getUTCDate() - 7);
-  return d.toISOString().slice(0, 10);
+/** ISO 週の月曜日 (YYYY-MM-DD) を返す */
+function weekMon(dateStr: string): string {
+  return toStr(startOfWeek(toDate(dateStr), { weekStartsOn: 1 }));
 }
 
 /**
  * 毎日チェック習慣のストリーク日数。
- * 今日未チェックでも昨日まで連続していれば維持する。
+ * 今日チェック済み → 今日から遡る。
+ * 今日未チェック → 昨日から遡る（連続を維持）。
  */
-export function calculateDailyStreak(checkIns: Date[], today: Date): number {
-  if (checkIns.length === 0) return 0;
-
-  const dateSet = new Set(checkIns.map(toJSTDateStr));
-  const todayStr = toJSTDateStr(today);
-  const yesterdayStr = prevDay(todayStr);
+export function calculateDailyStreak(
+  checkInDates: string[],
+  today: string
+): number {
+  const dateSet = new Set(checkInDates);
 
   let current: string;
-  if (dateSet.has(todayStr)) {
-    current = todayStr;
-  } else if (dateSet.has(yesterdayStr)) {
-    current = yesterdayStr;
+  if (dateSet.has(today)) {
+    current = today;
   } else {
-    return 0;
+    const yesterday = toStr(subDays(toDate(today), 1));
+    if (dateSet.has(yesterday)) {
+      current = yesterday;
+    } else {
+      return 0;
+    }
   }
 
   let streak = 0;
   while (dateSet.has(current)) {
     streak++;
-    current = prevDay(current);
+    current = toStr(subDays(toDate(current), 1));
   }
   return streak;
 }
 
 /**
  * 週単位チェック習慣のストリーク週数。
- * 今週が目標達成済みならその週から、未達成（進行中）なら前週から遡る。
+ * 今週が targetPerWeek 以上 → 今週を 1 としてカウント。
+ * 今週が未達 → 保留扱い（0 に落とさず、過去の連続週数を維持）。
+ * 過去週を遡り、連続して達成している週数を加算する。
  */
 export function calculateWeeklyStreak(
-  checkIns: Date[],
+  checkInDates: string[],
   targetPerWeek: number,
-  today: Date
+  today: string
 ): number {
-  if (checkIns.length === 0) return 0;
-
-  const todayStr = toJSTDateStr(today);
-  const currentWs = weekStartStr(todayStr);
-
+  // 週ごとのチェックイン数を集計
   const weekCounts = new Map<string, number>();
-  for (const ci of checkIns) {
-    const ws = weekStartStr(toJSTDateStr(ci));
+  for (const d of checkInDates) {
+    const ws = weekMon(d);
     weekCounts.set(ws, (weekCounts.get(ws) ?? 0) + 1);
   }
 
-  const thisWeekCount = weekCounts.get(currentWs) ?? 0;
-  let ws =
-    thisWeekCount >= targetPerWeek ? currentWs : prevWeekStart(currentWs);
+  const currentWs = weekMon(today);
+  const thisWeekDone = (weekCounts.get(currentWs) ?? 0) >= targetPerWeek ? 1 : 0;
 
-  let streak = 0;
+  // 先週から遡って連続達成週数をカウント
+  let pastStreak = 0;
+  let ws = toStr(subWeeks(toDate(currentWs), 1));
   while (true) {
-    const count = weekCounts.get(ws) ?? 0;
-    if (count >= targetPerWeek) {
-      streak++;
-      ws = prevWeekStart(ws);
+    if ((weekCounts.get(ws) ?? 0) >= targetPerWeek) {
+      pastStreak++;
+      ws = toStr(subWeeks(toDate(ws), 1));
     } else {
       break;
     }
-    if (streak > 10_000) break;
+    if (pastStreak > 10_000) break;
   }
-  return streak;
+
+  return thisWeekDone + pastStreak;
 }
 
+/**
+ * target_per_week に応じてストリーク計算を委譲する。
+ */
 export function getStreak(
-  checkIns: Date[],
-  targetPerWeek: number,
-  today: Date
+  habit: { target_per_week: number },
+  checkInDates: string[],
+  today: string
 ): number {
-  return targetPerWeek === 7
-    ? calculateDailyStreak(checkIns, today)
-    : calculateWeeklyStreak(checkIns, targetPerWeek, today);
+  return habit.target_per_week === 7
+    ? calculateDailyStreak(checkInDates, today)
+    : calculateWeeklyStreak(checkInDates, habit.target_per_week, today);
 }
