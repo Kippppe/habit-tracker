@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CalendarDays, ListChecks, BarChart3 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { LogoHorizontal } from "@/components/brand/logo";
 
 const NAV_ITEMS = [
   { href: "/today", label: "今日", icon: CalendarDays },
@@ -12,7 +13,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex flex-col min-h-screen">
       <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-sm border-b border-border">
-        <div className="flex items-center justify-end h-10 w-full max-w-3xl mx-auto px-4">
+        <div className="flex items-center justify-between h-12 w-full max-w-3xl mx-auto px-4">
+          <LogoHorizontal size={28} />
           <ThemeToggle />
         </div>
       </header>

@@ -42,22 +42,21 @@ export function HabitHeader({ habit }: Props) {
 
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3 min-w-0">
-          {/* color band */}
           <div
             className="w-1 mt-1 self-stretch rounded-full shrink-0"
-            style={{ backgroundColor: habit.color ?? "#d97706", minHeight: "2rem" }}
+            style={{ backgroundColor: habit.color ?? "#8b2820", minHeight: "2rem" }}
           />
           <div className="min-w-0">
-            <h1 className="text-2xl font-semibold tracking-tight truncate">
+            <h1 className="text-2xl font-serif font-normal tracking-tight truncate">
               {habit.name}
             </h1>
             <div className="flex flex-wrap gap-1.5 mt-1">
               {habit.category && (
-                <span className="text-xs bg-muted text-muted-foreground rounded-full px-2 py-0.5">
+                <span className="text-xs bg-muted text-muted-foreground rounded px-2 py-0.5">
                   {habit.category}
                 </span>
               )}
-              <span className="text-xs bg-muted text-muted-foreground rounded-full px-2 py-0.5">
+              <span className="text-xs bg-muted text-muted-foreground rounded px-2 py-0.5">
                 {DIFFICULTY_LABEL[habit.difficulty_level] ?? ""}
               </span>
             </div>
@@ -71,7 +70,7 @@ export function HabitHeader({ habit }: Props) {
               <Button
                 variant="outline"
                 size="sm"
-                className="rounded-xl h-8 px-3 text-xs"
+                className="rounded h-8 px-3 text-xs"
               >
                 編集
               </Button>
@@ -80,7 +79,7 @@ export function HabitHeader({ habit }: Props) {
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground"
+            className="h-8 w-8 rounded text-muted-foreground hover:text-foreground"
             onClick={handleArchive}
             disabled={isPending}
             aria-label="アーカイブ"

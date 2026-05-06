@@ -42,14 +42,13 @@ export function HabitCard({ habit, archived = false }: Props) {
 
   return (
     <div
-      className={`flex items-center gap-3 rounded-2xl bg-card border border-border px-4 py-3 shadow-sm transition-opacity ${
+      className={`flex items-center gap-3 rounded-md bg-card border border-border px-4 py-3 shadow-sm transition-opacity ${
         isPending ? "opacity-50" : ""
       }`}
     >
-      {/* color band */}
       <div
         className="w-1 self-stretch rounded-full shrink-0"
-        style={{ backgroundColor: habit.color ?? "#d97706" }}
+        style={{ backgroundColor: habit.color ?? "#8b2820" }}
       />
 
       <div className="flex-1 min-w-0">
@@ -72,7 +71,7 @@ export function HabitCard({ habit, archived = false }: Props) {
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground"
+            className="h-8 w-8 rounded text-muted-foreground hover:text-foreground"
             onClick={handleRestore}
             disabled={isPending}
             aria-label="復元"
@@ -87,7 +86,7 @@ export function HabitCard({ habit, archived = false }: Props) {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground"
+                  className="h-8 w-8 rounded text-muted-foreground hover:text-foreground"
                   aria-label="編集"
                 >
                   <Pencil size={15} />
@@ -97,7 +96,7 @@ export function HabitCard({ habit, archived = false }: Props) {
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground"
+              className="h-8 w-8 rounded text-muted-foreground hover:text-foreground"
               onClick={handleArchive}
               disabled={isPending}
               aria-label="アーカイブ"

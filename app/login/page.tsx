@@ -4,6 +4,7 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { LogoStacked } from "@/components/brand/logo";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -19,9 +20,7 @@ export default function LoginPage() {
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: {
-        emailRedirectTo: `${location.origin}/auth/callback`,
-      },
+      options: { emailRedirectTo: `${location.origin}/auth/callback` },
     });
 
     if (error) {
@@ -34,32 +33,24 @@ export default function LoginPage() {
 
   return (
     <main className="flex flex-1 min-h-screen items-center justify-center px-4">
-      <div className="w-full max-w-sm space-y-8">
-        <div className="space-y-2 text-center">
-          <h1 className="text-3xl font-semibold tracking-tight text-foreground">
-            習慣トラッカー
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            メールアドレスにマジックリンクを送信します
-          </p>
+      <div className="w-full max-w-sm space-y-10">
+        <div className="flex justify-center">
+          <LogoStacked size={56} />
         </div>
 
         {sent ? (
-          <div className="rounded-2xl bg-card border border-border p-6 text-center space-y-2 shadow-sm">
-            <p className="font-medium text-foreground">メールを送信しました</p>
+          <div className="rounded-md bg-card border border-border p-6 text-center space-y-2">
+            <p className="font-medium text-foreground">Check your email</p>
             <p className="text-sm text-muted-foreground">
-              <span className="font-medium text-foreground">{email}</span>{" "}
-              に届いたリンクをクリックしてログインしてください。
+              We sent a magic link to{" "}
+              <span className="font-medium text-foreground">{email}</span>.
             </p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <label
-                htmlFor="email"
-                className="text-sm font-medium text-foreground"
-              >
-                メールアドレス
+              <label htmlFor="email" className="text-sm font-medium text-foreground">
+                Email address
               </label>
               <Input
                 id="email"
@@ -70,20 +61,18 @@ export default function LoginPage() {
                 required
                 autoComplete="email"
                 autoFocus
-                className="rounded-xl"
+                className="rounded"
               />
             </div>
 
-            {error && (
-              <p className="text-sm text-destructive">{error}</p>
-            )}
+            {error && <p className="text-sm text-destructive">{error}</p>}
 
             <Button
               type="submit"
-              className="w-full rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
+              className="w-full rounded"
               disabled={loading}
             >
-              {loading ? "送信中…" : "マジックリンクを送る"}
+              {loading ? "Sending…" : "Send magic link"}
             </Button>
           </form>
         )}

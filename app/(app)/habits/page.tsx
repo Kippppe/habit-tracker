@@ -25,7 +25,7 @@ export default async function HabitsPage() {
         <h1 className="text-2xl font-semibold tracking-tight">習慣</h1>
         <HabitFormDialog
           trigger={
-            <Button className="rounded-xl gap-1.5">
+            <Button className="rounded gap-1.5">
               <Plus size={16} />
               追加
             </Button>

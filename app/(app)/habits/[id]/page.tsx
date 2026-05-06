@@ -172,11 +172,11 @@ export default async function HabitDetailPage({ params }: Props) {
     <div className="py-6 space-y-6">
       <HabitHeader habit={habit} />
       <StatsRow stats={stats} streakUnit={habit.target_per_week === 7 ? "日" : "週"} />
-      <section className="rounded-2xl bg-card border border-border p-4 shadow-sm space-y-3">
+      <section className="rounded-md bg-card border border-border p-4 shadow-sm space-y-3">
         <h2 className="text-sm font-semibold text-muted-foreground">過去1年</h2>
         <YearHeatmap weeks={heatmapWeeks} />
       </section>
-      <section className="rounded-2xl bg-card border border-border p-4 shadow-sm space-y-3">
+      <section className="rounded-md bg-card border border-border p-4 shadow-sm space-y-3">
         <h2 className="text-sm font-semibold text-muted-foreground">直近30日</h2>
         <Last30DaysChart data={chartData} />
       </section>

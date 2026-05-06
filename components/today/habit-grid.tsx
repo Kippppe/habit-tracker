@@ -48,10 +48,10 @@ function DayCell({ habitId, habitName, date, checked, onToggle }: DayCellProps) 
       aria-label={`${habitName} - ${date} - ${checked ? "完了" : "未完了"}`}
       aria-pressed={checked}
       className={cn(
-        "w-10 h-10 md:w-12 md:h-12 rounded-lg flex items-center justify-center shrink-0 transition-colors",
+        "w-10 h-10 md:w-12 md:h-12 rounded-sm flex items-center justify-center shrink-0 transition-colors",
         checked
-          ? "bg-amber-600 text-white"
-          : "bg-stone-100 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 text-transparent"
+          ? "bg-shu text-kinari"
+          : "bg-kinari-soft dark:bg-sumi-soft border border-line dark:border-sumi-soft/50 text-transparent"
       )}
     >
       <AnimatePresence>
@@ -225,7 +225,7 @@ export function HabitGrid({
         </p>
         <Link
           href="/habits"
-          className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+          className="inline-flex items-center gap-1.5 rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
         >
           <Plus size={15} />
           習慣を追加
@@ -267,7 +267,7 @@ export function HabitGrid({
       </div>
 
       {/* ── Grid ── */}
-      <div className="rounded-2xl bg-card shadow-sm p-4 overflow-x-auto">
+      <div className="rounded-md bg-card shadow-sm p-4 overflow-x-auto">
         <div className="min-w-max">
           {/* Column headers */}
           <div className="flex items-center gap-1.5 mb-2">

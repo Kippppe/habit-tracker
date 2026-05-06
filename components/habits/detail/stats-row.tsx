@@ -16,10 +16,8 @@ function StatCard({ label, value, accent }: StatCardProps) {
   return (
     <div
       className={cn(
-        "rounded-2xl border p-4 flex flex-col gap-1",
-        accent
-          ? "bg-primary/5 border-primary/20"
-          : "bg-card border-border"
+        "rounded-md border p-4 flex flex-col gap-1",
+        accent ? "bg-primary/5 border-primary/20" : "bg-card border-border"
       )}
     >
       <span

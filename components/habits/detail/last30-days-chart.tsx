@@ -20,7 +20,7 @@ function CustomTooltip({ active, payload }: TooltipProps) {
   if (!active || !payload?.[0]) return null;
   const { date, checked } = payload[0].payload;
   return (
-    <div className="rounded-xl bg-card border border-border px-3 py-2 text-sm shadow-md">
+    <div className="rounded-md bg-card border border-border px-3 py-2 text-sm shadow-md">
       <p className="font-medium tabular-nums">{date}</p>
       <p className={checked ? "text-primary" : "text-muted-foreground"}>
         {checked ? "完了" : "未完了"}
@@ -36,9 +36,9 @@ interface Props {
 export function Last30DaysChart({ data }: Props) {
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
-  const checkedColor = isDark ? "#f59e0b" : "#d97706";
-  const uncheckedColor = isDark ? "#44403c" : "#e7e5e4";
-  const tickColor = isDark ? "#a8a29e" : "#78716c";
+  const checkedColor = isDark ? "#b8463a" : "#8b2820";
+  const uncheckedColor = isDark ? "#3a3530" : "#ebe2d2";
+  const tickColor = isDark ? "#d6cab0" : "#4a4640";
 
   return (
     <ResponsiveContainer width="100%" height={100}>
@@ -54,7 +54,7 @@ export function Last30DaysChart({ data }: Props) {
           content={<CustomTooltip />}
           cursor={{ fill: "transparent" }}
         />
-        <Bar dataKey={() => 1} radius={[3, 3, 0, 0]}>
+        <Bar dataKey={() => 1} radius={[2, 2, 0, 0]}>
           {data.map((entry, i) => (
             <Cell
               key={i}

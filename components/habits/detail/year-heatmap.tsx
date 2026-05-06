@@ -2,10 +2,10 @@ import { cn } from "@/lib/utils";
 import type { HeatmapWeek } from "@/app/(app)/habits/[id]/page";
 
 const INTENSITY_CLASS: Record<0 | 1 | 2 | 3, string> = {
-  0: "bg-stone-100 dark:bg-stone-800",
-  1: "bg-amber-200 dark:bg-amber-900",
-  2: "bg-amber-400 dark:bg-amber-600",
-  3: "bg-amber-600 dark:bg-amber-400",
+  0: "bg-kinari-soft dark:bg-sumi-soft",
+  1: "bg-shu/20 dark:bg-shu/30",
+  2: "bg-shu/55 dark:bg-shu-soft",
+  3: "bg-shu dark:bg-shu-soft",
 };
 
 const WEEKDAY_LABELS = ["月", "", "水", "", "金", "", "日"];

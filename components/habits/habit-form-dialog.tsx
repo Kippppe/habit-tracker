@@ -22,8 +22,14 @@ import { createHabit, updateHabit } from "@/app/habits/actions";
 import type { Habit } from "@/lib/types/database";
 
 const PRESET_COLORS = [
-  "#d97706", "#ef4444", "#3b82f6", "#10b981",
-  "#8b5cf6", "#f97316", "#ec4899", "#6b7280",
+  "#8b2820", // shu
+  "#b8463a", // shu-soft
+  "#ef4444", // red
+  "#3b82f6", // blue
+  "#10b981", // emerald
+  "#8b5cf6", // purple
+  "#ec4899", // pink
+  "#6b7280", // gray
 ];
 
 const DAYS = [
@@ -58,14 +64,14 @@ export function HabitFormDialog({ habit, trigger }: Props) {
   const [difficultyLevel, setDifficultyLevel] = useState(
     String(habit?.difficulty_level ?? 1)
   );
-  const [color, setColor] = useState(habit?.color ?? "#d97706");
+  const [color, setColor] = useState(habit?.color ?? "#8b2820");
 
   function reset() {
     setName(habit?.name ?? "");
     setCategory(habit?.category ?? "");
     setTargetPerWeek(String(habit?.target_per_week ?? 7));
     setDifficultyLevel(String(habit?.difficulty_level ?? 1));
-    setColor(habit?.color ?? "#d97706");
+    setColor(habit?.color ?? "#8b2820");
   }
 
   function handleOpenChange(v: boolean) {
@@ -96,7 +102,7 @@ export function HabitFormDialog({ habit, trigger }: Props) {
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="rounded-2xl max-w-sm">
+      <DialogContent className="rounded-md max-w-sm">
         <DialogHeader>
           <DialogTitle>{habit ? "習慣を編集" : "習慣を追加"}</DialogTitle>
         </DialogHeader>
@@ -109,7 +115,7 @@ export function HabitFormDialog({ habit, trigger }: Props) {
               onChange={(e) => setName(e.target.value)}
               placeholder="例: 30分読書"
               required
-              className="rounded-xl"
+              className="rounded"
             />
           </div>
 
@@ -120,7 +126,7 @@ export function HabitFormDialog({ habit, trigger }: Props) {
               value={category}
               onChange={(e) => setCategory(e.target.value)}
               placeholder="例: 健康、学習"
-              className="rounded-xl"
+              className="rounded"
             />
           </div>
 
@@ -128,7 +134,7 @@ export function HabitFormDialog({ habit, trigger }: Props) {
             <div className="space-y-1.5">
               <Label>目標頻度</Label>
               <Select value={targetPerWeek} onValueChange={setTargetPerWeek}>
-                <SelectTrigger className="rounded-xl">
+                <SelectTrigger className="rounded">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -144,7 +150,7 @@ export function HabitFormDialog({ habit, trigger }: Props) {
             <div className="space-y-1.5">
               <Label>難易度</Label>
               <Select value={difficultyLevel} onValueChange={setDifficultyLevel}>
-                <SelectTrigger className="rounded-xl">
+                <SelectTrigger className="rounded">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -166,7 +172,7 @@ export function HabitFormDialog({ habit, trigger }: Props) {
                   key={c}
                   type="button"
                   onClick={() => setColor(c)}
-                  className="w-7 h-7 rounded-lg transition-transform hover:scale-110 focus:outline-none"
+                  className="w-7 h-7 rounded-sm transition-transform hover:scale-110 focus:outline-none"
                   style={{ backgroundColor: c }}
                   aria-label={c}
                 >
@@ -184,14 +190,14 @@ export function HabitFormDialog({ habit, trigger }: Props) {
             <Button
               type="button"
               variant="outline"
-              className="flex-1 rounded-xl"
+              className="flex-1 rounded"
               onClick={() => setOpen(false)}
             >
               キャンセル
             </Button>
             <Button
               type="submit"
-              className="flex-1 rounded-xl"
+              className="flex-1 rounded"
               disabled={isPending || !name.trim()}
             >
               {isPending ? "保存中…" : "保存"}

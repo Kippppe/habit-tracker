@@ -15,7 +15,7 @@ function SummaryCard({
   value: string | number;
 }) {
   return (
-    <div className="rounded-2xl bg-card border border-border p-4 flex flex-col gap-1 shadow-sm">
+    <div className="rounded-md bg-card border border-border p-4 flex flex-col gap-1 shadow-sm">
       <span className="text-3xl font-semibold tabular-nums tracking-tight">
         {value}
       </span>
@@ -27,9 +27,9 @@ function SummaryCard({
 // ── Percentage color ──────────────────────────────────────────────────────────
 
 function pctClass(v: number): string {
-  if (v >= 80) return "text-amber-600 dark:text-amber-500";
-  if (v >= 50) return "text-stone-700 dark:text-stone-300";
-  return "text-stone-400";
+  if (v >= 80) return "text-shu dark:text-shu-soft";
+  if (v >= 50) return "text-sumi-soft dark:text-line";
+  return "text-sumi-soft";
 }
 
 // ── Sort ──────────────────────────────────────────────────────────────────────
@@ -58,10 +58,10 @@ function CategoryBadge({
   if (!category) return null;
   return (
     <span
-      className="text-xs rounded-full px-2 py-0.5 font-medium ml-1.5"
+      className="text-xs rounded px-2 py-0.5 font-medium ml-1.5"
       style={{
-        backgroundColor: `${color ?? "#d97706"}33`, // 20% opacity
-        color: color ?? "#d97706",
+        backgroundColor: `${color ?? "#8b2820"}33`,
+        color: color ?? "#8b2820",
       }}
     >
       {category}
@@ -133,7 +133,7 @@ export function StatsClient({ habitStats, summary }: Props) {
 
       {/* Desktop table */}
       {habitStats.length > 0 && (
-        <div className="hidden md:block rounded-2xl bg-card border border-border shadow-sm overflow-hidden">
+        <div className="hidden md:block rounded-md bg-card border border-border shadow-sm overflow-hidden">
           <table className="w-full border-collapse">
             <thead>
               <tr className="border-b border-border">
@@ -147,19 +147,16 @@ export function StatsClient({ habitStats, summary }: Props) {
               </tr>
             </thead>
             <tbody>
-              {rows.map((h, i) => (
+              {rows.map((h) => (
                 <tr
                   key={h.id}
-                  className={cn(
-                    "border-b border-border last:border-0 hover:bg-stone-50 dark:hover:bg-stone-900 transition-colors",
-                    i % 2 === 0 ? "" : ""
-                  )}
+                  className="border-b border-border last:border-0 hover:bg-kinari-soft/50 dark:hover:bg-sumi-soft/20 transition-colors"
                 >
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <div
                         className="w-0.5 h-4 rounded-full shrink-0"
-                        style={{ backgroundColor: h.color ?? "#d97706" }}
+                        style={{ backgroundColor: h.color ?? "#8b2820" }}
                       />
                       <span className="text-sm font-medium">{h.name}</span>
                       <CategoryBadge
@@ -190,7 +187,6 @@ export function StatsClient({ habitStats, summary }: Props) {
       {/* Mobile card list */}
       {habitStats.length > 0 && (
         <div className="md:hidden space-y-2">
-          {/* Sort buttons for mobile */}
           <div className="flex gap-2 flex-wrap text-xs">
             {(
               [
@@ -218,12 +214,12 @@ export function StatsClient({ habitStats, summary }: Props) {
           {rows.map((h) => (
             <div
               key={h.id}
-              className="rounded-2xl bg-card border border-border p-4 shadow-sm space-y-3"
+              className="rounded-md bg-card border border-border p-4 shadow-sm space-y-3"
             >
               <div className="flex items-center gap-2">
                 <div
                   className="w-0.5 h-4 rounded-full shrink-0"
-                  style={{ backgroundColor: h.color ?? "#d97706" }}
+                  style={{ backgroundColor: h.color ?? "#8b2820" }}
                 />
                 <span className="font-medium text-sm">{h.name}</span>
                 <CategoryBadge category={h.category} color={h.color} />

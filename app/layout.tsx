@@ -1,32 +1,39 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Fraunces, Manrope, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/app/providers";
 import { SwRegister } from "@/app/sw-register";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const fraunces = Fraunces({
   subsets: ["latin"],
+  variable: "--font-fraunces",
+  axes: ["opsz"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const manrope = Manrope({
   subsets: ["latin"],
+  variable: "--font-manrope",
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-jetbrains-mono",
+  weight: ["400", "500"],
 });
 
 export const metadata: Metadata = {
-  title: "習慣トラッカー",
-  description: "日々の習慣を記録・可視化するPWAアプリ",
+  title: "kipwork — habits",
+  description: "Track your daily habits",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "習慣トラッカー",
+    title: "kipwork",
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#d97706",
+  themeColor: "#8b2820",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -41,7 +48,7 @@ export default function RootLayout({
     <html
       lang="ja"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${fraunces.variable} ${manrope.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
       <head>
         <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
