@@ -72,6 +72,28 @@ export interface Database {
         };
         Relationships: [];
       };
+      milestones: {
+        Row: {
+          id: string;
+          user_id: string;
+          habit_id: string | null;
+          type: string;
+          achieved_date: string;
+          achieved_at: string;
+          metadata: unknown | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          habit_id?: string | null;
+          type: string;
+          achieved_date: string;
+          achieved_at?: string;
+          metadata?: unknown | null;
+        };
+        Update: Record<string, never>;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

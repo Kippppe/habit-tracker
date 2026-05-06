@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { upsertCheckIn, deleteCheckIn } from "@/app/today/actions";
 import { enqueueCheckIn, flushQueue } from "@/lib/offline-queue";
@@ -9,7 +9,9 @@ import { TodayHeroCard } from "./today-hero-card";
 import { WeekGridSection } from "./week-grid-section";
 import { DailyStatsRow } from "./daily-stats-row";
 import { CategoryBreakdown } from "./category-breakdown";
+import { AchievementOverlay } from "./achievement-overlay";
 import type { Habit, CheckIn } from "@/lib/types/database";
+import type { Achievement } from "@/lib/types/achievements";
 
 // ── Section chrome ────────────────────────────────────────────────────────────
 
@@ -98,6 +100,7 @@ interface Props {
 export function TodayDashboard({ habits, initialCheckIns, todayJST, since }: Props) {
   const queryClient = useQueryClient();
   const qKey = ["check_ins", since, todayJST] as const;
+  const [achievement, setAchievement] = useState<Achievement | null>(null);
 
   const { data: checkIns = initialCheckIns } = useQuery<CheckIn[]>({
     queryKey: qKey,
@@ -135,10 +138,13 @@ export function TodayDashboard({ habits, initialCheckIns, todayJST, since }: Pro
       const action = checked ? "delete" : "upsert";
       if (!navigator.onLine) {
         await enqueueCheckIn(habitId, date, action);
-        return;
+        return null;
       }
-      if (checked) await deleteCheckIn(habitId, date);
-      else await upsertCheckIn(habitId, date);
+      if (checked) { await deleteCheckIn(habitId, date); return null; }
+      return await upsertCheckIn(habitId, date);
+    },
+    onSuccess: (data) => {
+      if (data?.achievement) setAchievement(data.achievement);
     },
     onMutate: async ({ habitId, date, checked }) => {
       await queryClient.cancelQueries({ queryKey: qKey });
@@ -165,6 +171,8 @@ export function TodayDashboard({ habits, initialCheckIns, todayJST, since }: Pro
   }
 
   return (
+    <>
+    <AchievementOverlay achievement={achievement} onClose={() => setAchievement(null)} />
     <div className="py-8 space-y-20">
       {/* 01 TODAY */}
       <section>
@@ -208,5 +216,6 @@ export function TodayDashboard({ habits, initialCheckIns, todayJST, since }: Pro
         <CategoryBreakdown stats={categoryStats} />
       </section>
     </div>
+    </>
   );
 }
