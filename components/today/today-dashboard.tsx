@@ -5,10 +5,10 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { upsertCheckIn, deleteCheckIn } from "@/app/today/actions";
 import { enqueueCheckIn, flushQueue } from "@/lib/offline-queue";
 import { shiftDate } from "@/utils/date";
-import { TodayHeroCard } from "./today-hero-card";
-import { WeekGridSection } from "./week-grid-section";
-import { DailyStatsRow } from "./daily-stats-row";
-import { CategoryBreakdown } from "./category-breakdown";
+import { HeroRing } from "./hero-ring";
+import { HabitGridV2 } from "./habit-grid-v2";
+import { StatCards } from "./stat-cards";
+import { CategoryCards } from "./category-cards";
 import { AchievementOverlay } from "./achievement-overlay";
 import type { Habit, CheckIn } from "@/lib/types/database";
 import type { Achievement } from "@/lib/types/achievements";
@@ -25,13 +25,29 @@ function SectionLabel({ num, label }: { num: string; label: string }) {
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="font-serif text-[26px] md:text-[30px] font-normal tracking-tight leading-tight mb-1">
+    <h2 className="font-serif text-[26px] md:text-[30px] font-normal tracking-tight leading-tight mb-4">
       {children}
     </h2>
   );
 }
 
-// ── Stats derivation ──────────────────────────────────────────────────────────
+// ── Derivation helpers ────────────────────────────────────────────────────────
+
+const DAY_NAMES_JP = ["日曜日", "月曜日", "火曜日", "水曜日", "木曜日", "金曜日", "土曜日"];
+const DAY_ABBRS_JP = ["月", "火", "水", "木", "金", "土", "日"];
+
+function getDayNameJP(dateStr: string): string {
+  const dow = new Date(dateStr + "T00:00:00Z").getUTCDay();
+  return DAY_NAMES_JP[dow];
+}
+
+function getWeekDaysSoFar(today: string): string[] {
+  const dow = new Date(today + "T00:00:00Z").getUTCDay();
+  const daysSinceMon = dow === 0 ? 6 : dow - 1;
+  return Array.from({ length: daysSinceMon + 1 }, (_, i) =>
+    shiftDate(today, -(daysSinceMon - i))
+  );
+}
 
 function deriveOverallStreak(checkInSet: Set<string>, today: string): number {
   const dates = new Set<string>();
@@ -45,13 +61,23 @@ function deriveOverallStreak(checkInSet: Set<string>, today: string): number {
   return count;
 }
 
+function deriveBestStreak(checkInSet: Set<string>): number {
+  const dates = Array.from(new Set(Array.from(checkInSet).map(k => k.slice(-10)))).sort();
+  if (dates.length === 0) return 0;
+  let best = 1, current = 1;
+  for (let i = 1; i < dates.length; i++) {
+    const diff =
+      (new Date(dates[i] + "T00:00:00Z").getTime() -
+        new Date(dates[i - 1] + "T00:00:00Z").getTime()) /
+      86400000;
+    if (diff === 1) { current++; best = Math.max(best, current); }
+    else current = 1;
+  }
+  return best;
+}
+
 function deriveThisWeekPct(habits: Habit[], checkInSet: Set<string>, today: string): number {
-  const todayD = new Date(today + "T00:00:00Z");
-  const dow = todayD.getUTCDay();
-  const daysSinceMon = dow === 0 ? 6 : dow - 1;
-  const days = Array.from({ length: daysSinceMon + 1 }, (_, i) =>
-    shiftDate(today, -(daysSinceMon - i))
-  );
+  const days = getWeekDaysSoFar(today);
   const total = days.length * habits.length;
   if (total === 0) return 0;
   const done = days.reduce(
@@ -59,6 +85,25 @@ function deriveThisWeekPct(habits: Habit[], checkInSet: Set<string>, today: stri
     0
   );
   return Math.round((done / total) * 100);
+}
+
+function deriveWeekBars(habits: Habit[], checkInSet: Set<string>, today: string) {
+  const dow = new Date(today + "T00:00:00Z").getUTCDay();
+  const daysSinceMon = dow === 0 ? 6 : dow - 1;
+  const monday = shiftDate(today, -daysSinceMon);
+  return Array.from({ length: 7 }, (_, i) => {
+    const date = shiftDate(monday, i);
+    const isFuture = date > today;
+    const pct =
+      isFuture || habits.length === 0
+        ? 0
+        : Math.round(
+            (habits.filter(h => checkInSet.has(`${h.id}:${date}`)).length /
+              habits.length) *
+              100
+          );
+    return { day: DAY_ABBRS_JP[i], pct, isToday: date === today };
+  });
 }
 
 function deriveSparkline(habits: Habit[], checkInSet: Set<string>, today: string) {
@@ -70,6 +115,7 @@ function deriveSparkline(habits: Habit[], checkInSet: Set<string>, today: string
 }
 
 function deriveCategoryStats(habits: Habit[], checkInSet: Set<string>, today: string) {
+  const weekDays = getWeekDaysSoFar(today);
   const map = new Map<string, Habit[]>();
   habits.forEach(h => {
     const cat = h.category ?? "";
@@ -78,11 +124,18 @@ function deriveCategoryStats(habits: Habit[], checkInSet: Set<string>, today: st
   });
   return Array.from(map.entries()).map(([category, catHabits]) => {
     const done = catHabits.filter(h => checkInSet.has(`${h.id}:${today}`)).length;
+    const weekTotal = weekDays.length * catHabits.length;
+    const weekDone = weekDays.reduce(
+      (acc, d) =>
+        acc + catHabits.filter(h => checkInSet.has(`${h.id}:${d}`)).length,
+      0
+    );
     return {
       category,
       done,
       total: catHabits.length,
       pct: catHabits.length > 0 ? Math.round((done / catHabits.length) * 100) : 0,
+      weekPct: weekTotal > 0 ? Math.round((weekDone / weekTotal) * 100) : 0,
       color: catHabits[0]?.color ?? "#8b2820",
     };
   });
@@ -128,22 +181,48 @@ export function TodayDashboard({ habits, initialCheckIns, todayJST, since }: Pro
   );
 
   const todayPct = habits.length > 0 ? Math.round((todayChecked / habits.length) * 100) : 0;
-  const overallStreak = useMemo(() => deriveOverallStreak(checkInSet, todayJST), [checkInSet, todayJST]);
-  const thisWeekPct = useMemo(() => deriveThisWeekPct(habits, checkInSet, todayJST), [habits, checkInSet, todayJST]);
-  const sparklineData = useMemo(() => deriveSparkline(habits, checkInSet, todayJST), [habits, checkInSet, todayJST]);
-  const categoryStats = useMemo(() => deriveCategoryStats(habits, checkInSet, todayJST), [habits, checkInSet, todayJST]);
+
+  const streak = useMemo(
+    () => deriveOverallStreak(checkInSet, todayJST),
+    [checkInSet, todayJST]
+  );
+  const bestStreak = useMemo(() => deriveBestStreak(checkInSet), [checkInSet]);
+  const thisWeekPct = useMemo(
+    () => deriveThisWeekPct(habits, checkInSet, todayJST),
+    [habits, checkInSet, todayJST]
+  );
+  const weekBars = useMemo(
+    () => deriveWeekBars(habits, checkInSet, todayJST),
+    [habits, checkInSet, todayJST]
+  );
+  const sparklineData = useMemo(
+    () => deriveSparkline(habits, checkInSet, todayJST),
+    [habits, checkInSet, todayJST]
+  );
+  const categoryStats = useMemo(
+    () => deriveCategoryStats(habits, checkInSet, todayJST),
+    [habits, checkInSet, todayJST]
+  );
+  const dayName = getDayNameJP(todayJST);
 
   const mutation = useMutation({
-    mutationFn: async ({ habitId, date, checked }: { habitId: string; date: string; checked: boolean }) => {
-      const action = checked ? "delete" : "upsert";
+    mutationFn: async ({
+      habitId,
+      date,
+      checked,
+    }: {
+      habitId: string;
+      date: string;
+      checked: boolean;
+    }) => {
       if (!navigator.onLine) {
-        await enqueueCheckIn(habitId, date, action);
+        await enqueueCheckIn(habitId, date, checked ? "delete" : "upsert");
         return null;
       }
       if (checked) { await deleteCheckIn(habitId, date); return null; }
       return await upsertCheckIn(habitId, date);
     },
-    onSuccess: (data) => {
+    onSuccess: data => {
       if (data?.achievement) setAchievement(data.achievement);
     },
     onMutate: async ({ habitId, date, checked }) => {
@@ -151,18 +230,23 @@ export function TodayDashboard({ habits, initialCheckIns, todayJST, since }: Pro
       const prev = queryClient.getQueryData<CheckIn[]>(qKey);
       queryClient.setQueryData<CheckIn[]>(qKey, (old = []) => {
         if (checked) return old.filter(ci => !(ci.habit_id === habitId && ci.date === date));
-        return [...old, {
-          id: `optimistic-${habitId}-${date}`,
-          habit_id: habitId,
-          user_id: "",
-          date,
-          note: null,
-          created_at: new Date().toISOString(),
-        }];
+        return [
+          ...old,
+          {
+            id: `optimistic-${habitId}-${date}`,
+            habit_id: habitId,
+            user_id: "",
+            date,
+            note: null,
+            created_at: new Date().toISOString(),
+          },
+        ];
       });
       return { prev };
     },
-    onError: (_e, _v, ctx) => { if (ctx?.prev) queryClient.setQueryData(qKey, ctx.prev); },
+    onError: (_e, _v, ctx) => {
+      if (ctx?.prev) queryClient.setQueryData(qKey, ctx.prev);
+    },
     onSettled: () => queryClient.invalidateQueries({ queryKey: qKey }),
   });
 
@@ -172,50 +256,65 @@ export function TodayDashboard({ habits, initialCheckIns, todayJST, since }: Pro
 
   return (
     <>
-    <AchievementOverlay achievement={achievement} onClose={() => setAchievement(null)} />
-    <div className="py-8 space-y-20">
-      {/* 01 TODAY */}
-      <section>
-        <SectionLabel num="01" label="TODAY" />
-        <SectionTitle>How are you doing <em>today</em>?</SectionTitle>
-        <TodayHeroCard
-          checked={todayChecked}
-          total={habits.length}
-          overallStreak={overallStreak}
-        />
-      </section>
+      <AchievementOverlay achievement={achievement} onClose={() => setAchievement(null)} />
+      <div className="py-6 space-y-14">
 
-      {/* 02 THE GRID */}
-      <section>
-        <SectionLabel num="02" label="THE GRID" />
-        <SectionTitle>Your habits, <em>at a glance</em></SectionTitle>
-        {habits.length === 0 ? (
-          <p className="text-muted-foreground text-sm py-8">まだ習慣が登録されていません。</p>
-        ) : (
-          <WeekGridSection
-            habits={habits}
-            checkInSet={checkInSet}
-            todayJST={todayJST}
-            onToggle={handleToggle}
-          />
+        {/* 01 TODAY */}
+        <section>
+          <SectionLabel num="01" label="TODAY" />
+          <SectionTitle>
+            <em>{dayName}</em>の記録
+          </SectionTitle>
+          <HeroRing checked={todayChecked} total={habits.length} streak={streak} />
+        </section>
+
+        {habits.length > 0 && (
+          <>
+            {/* 02 THE GRID */}
+            <section>
+              <SectionLabel num="02" label="THE GRID" />
+              <SectionTitle>
+                習慣の<em>グリッド</em>
+              </SectionTitle>
+              <HabitGridV2
+                habits={habits}
+                checkInSet={checkInSet}
+                todayJST={todayJST}
+                onToggle={handleToggle}
+              />
+            </section>
+
+            {/* 03 TRENDS */}
+            <section>
+              <SectionLabel num="03" label="TRENDS" />
+              <SectionTitle>
+                進捗の<em>傾向</em>
+              </SectionTitle>
+              <StatCards
+                todayPct={todayPct}
+                todayChecked={todayChecked}
+                todayTotal={habits.length}
+                streak={streak}
+                bestStreak={bestStreak}
+                thisWeekPct={thisWeekPct}
+                weekBars={weekBars}
+                sparklineData={sparklineData}
+              />
+            </section>
+
+            {/* 04 BY CATEGORY */}
+            {categoryStats.length > 0 && (
+              <section>
+                <SectionLabel num="04" label="BY CATEGORY" />
+                <SectionTitle>
+                  カテゴリ別の<em>状況</em>
+                </SectionTitle>
+                <CategoryCards stats={categoryStats} />
+              </section>
+            )}
+          </>
         )}
-      </section>
-
-      {/* 03 TRENDS */}
-      <section>
-        <SectionLabel num="03" label="TRENDS" />
-        <SectionTitle>Patterns and <em>progress</em></SectionTitle>
-        <DailyStatsRow
-          todayPct={todayPct}
-          todayChecked={todayChecked}
-          todayTotal={habits.length}
-          streak={overallStreak}
-          thisWeekPct={thisWeekPct}
-          sparklineData={sparklineData}
-        />
-        <CategoryBreakdown stats={categoryStats} />
-      </section>
-    </div>
+      </div>
     </>
   );
 }
