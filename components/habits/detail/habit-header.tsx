@@ -2,18 +2,11 @@
 
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Archive, ArrowLeft } from "lucide-react";
+import { Archive, ArrowLeft, Pencil, Share2 } from "lucide-react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import { HabitFormDialog } from "@/components/habits/habit-form-dialog";
 import { archiveHabit } from "@/app/habits/actions";
 import type { Habit } from "@/lib/types/database";
-
-const DIFFICULTY_LABEL: Record<number, string> = {
-  1: "簡単",
-  2: "普通",
-  3: "難しい",
-};
 
 interface Props {
   habit: Habit;
@@ -30,62 +23,83 @@ export function HabitHeader({ habit }: Props) {
     });
   }
 
+  async function handleShare() {
+    const url = window.location.href;
+    if (navigator.share) {
+      await navigator.share({ title: habit.name, url }).catch(() => {});
+    } else {
+      await navigator.clipboard.writeText(url).catch(() => {});
+    }
+  }
+
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       <Link
         href="/habits"
-        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
       >
-        <ArrowLeft size={14} />
+        <ArrowLeft size={12} />
         習慣一覧
       </Link>
 
       <div className="flex items-start justify-between gap-3">
-        <div className="flex items-start gap-3 min-w-0">
+        <div className="min-w-0">
+          {/* Category badge */}
+          {habit.category && (
+            <span
+              className="inline-block text-[10px] font-mono uppercase tracking-widest px-2 py-0.5 rounded mb-2"
+              style={{
+                border: "1px solid #8b2820",
+                color: "#4a4640",
+              }}
+            >
+              {habit.category}
+            </span>
+          )}
+
+          {/* Habit name */}
+          <h1
+            className="font-serif italic font-normal tracking-tight leading-tight"
+            style={{ fontSize: "clamp(28px, 5vw, 36px)" }}
+          >
+            {habit.name}
+          </h1>
+
+          {/* Color accent */}
           <div
-            className="w-1 mt-1 self-stretch rounded-full shrink-0"
-            style={{ backgroundColor: habit.color ?? "#8b2820", minHeight: "2rem" }}
+            className="mt-2 h-0.5 w-12 rounded-full"
+            style={{ backgroundColor: habit.color ?? "#8b2820" }}
           />
-          <div className="min-w-0">
-            <h1 className="text-2xl font-serif font-normal tracking-tight truncate">
-              {habit.name}
-            </h1>
-            <div className="flex flex-wrap gap-1.5 mt-1">
-              {habit.category && (
-                <span className="text-xs bg-muted text-muted-foreground rounded px-2 py-0.5">
-                  {habit.category}
-                </span>
-              )}
-              <span className="text-xs bg-muted text-muted-foreground rounded px-2 py-0.5">
-                {DIFFICULTY_LABEL[habit.difficulty_level] ?? ""}
-              </span>
-            </div>
-          </div>
         </div>
 
-        <div className="flex items-center gap-1 shrink-0">
+        {/* Icon actions */}
+        <div className="flex items-center gap-0.5 shrink-0 mt-1">
           <HabitFormDialog
             habit={habit}
             trigger={
-              <Button
-                variant="outline"
-                size="sm"
-                className="rounded h-8 px-3 text-xs"
+              <button
+                className="h-8 w-8 flex items-center justify-center rounded text-sumi-soft hover:text-foreground hover:bg-muted transition-colors"
+                aria-label="編集"
               >
-                編集
-              </Button>
+                <Pencil size={15} />
+              </button>
             }
           />
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 rounded text-muted-foreground hover:text-foreground"
+          <button
+            className="h-8 w-8 flex items-center justify-center rounded text-sumi-soft hover:text-foreground hover:bg-muted transition-colors"
+            onClick={handleShare}
+            aria-label="共有"
+          >
+            <Share2 size={15} />
+          </button>
+          <button
+            className="h-8 w-8 flex items-center justify-center rounded text-sumi-soft hover:text-foreground hover:bg-muted transition-colors disabled:opacity-40"
             onClick={handleArchive}
             disabled={isPending}
             aria-label="アーカイブ"
           >
             <Archive size={15} />
-          </Button>
+          </button>
         </div>
       </div>
     </div>

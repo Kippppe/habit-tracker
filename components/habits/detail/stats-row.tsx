@@ -1,4 +1,3 @@
-import { cn } from "@/lib/utils";
 import type { HabitStats } from "@/app/(app)/habits/[id]/page";
 
 interface Props {
@@ -6,44 +5,26 @@ interface Props {
   streakUnit: "日" | "週";
 }
 
-interface StatCardProps {
-  label: string;
-  value: string;
-  accent?: boolean;
-}
-
-function StatCard({ label, value, accent }: StatCardProps) {
-  return (
-    <div
-      className={cn(
-        "rounded-md border p-4 flex flex-col gap-1",
-        accent ? "bg-primary/5 border-primary/20" : "bg-card border-border"
-      )}
-    >
-      <span
-        className={cn(
-          "text-3xl font-semibold tabular-nums tracking-tight",
-          accent ? "text-primary" : "text-foreground"
-        )}
-      >
-        {value}
-      </span>
-      <span className="text-xs text-muted-foreground">{label}</span>
-    </div>
-  );
-}
-
+// Kept for backwards compat — page now uses ScoreCards; this file is unused.
 export function StatsRow({ stats, streakUnit }: Props) {
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-      <StatCard
-        label={`現在ストリーク (${streakUnit})`}
-        value={String(stats.streak)}
-        accent
-      />
-      <StatCard label="直近7日" value={`${stats.last7Pct}%`} />
-      <StatCard label="直近30日" value={`${stats.last30Pct}%`} />
-      <StatCard label="全期間" value={`${stats.allTimePct}%`} />
+      <div className="rounded-md border p-4 bg-primary/5 border-primary/20 flex flex-col gap-1">
+        <span className="text-3xl font-semibold tabular-nums text-primary">{stats.streak}</span>
+        <span className="text-xs text-muted-foreground">ストリーク ({streakUnit})</span>
+      </div>
+      <div className="rounded-md border p-4 bg-card border-border flex flex-col gap-1">
+        <span className="text-3xl font-semibold tabular-nums">{stats.thisWeekPct}%</span>
+        <span className="text-xs text-muted-foreground">今週</span>
+      </div>
+      <div className="rounded-md border p-4 bg-card border-border flex flex-col gap-1">
+        <span className="text-3xl font-semibold tabular-nums">{stats.thisMonthPct}%</span>
+        <span className="text-xs text-muted-foreground">今月</span>
+      </div>
+      <div className="rounded-md border p-4 bg-card border-border flex flex-col gap-1">
+        <span className="text-3xl font-semibold tabular-nums">{stats.allTimePct}%</span>
+        <span className="text-xs text-muted-foreground">全期間</span>
+      </div>
     </div>
   );
 }
