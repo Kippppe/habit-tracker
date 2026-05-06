@@ -16,7 +16,9 @@ import { ScoreCards } from "@/components/habits/detail/score-cards";
 import { YearHeatmap } from "@/components/habits/detail/year-heatmap";
 import { GoalBarChart } from "@/components/charts/goal-bar-chart";
 import { MonthlyChart } from "@/components/habits/detail/monthly-chart";
+import { DayOfWeekChart } from "@/components/habits/detail/day-of-week-chart";
 import type { Habit } from "@/lib/types/database";
+import type { DayOfWeekStat } from "@/components/habits/detail/day-of-week-chart";
 
 // ── Type exports (used by child components) ───────────────────────────────────
 
@@ -51,6 +53,7 @@ export interface NoteEntry {
 
 export interface HabitStats {
   streak: number;
+  bestStreak: number;
   thisWeekPct: number;
   thisMonthPct: number;
   allTimePct: number;
@@ -140,6 +143,47 @@ function buildMonthlyData(
   });
 }
 
+function buildBestStreak(checkInDates: string[]): number {
+  const sorted = [...checkInDates].sort();
+  if (sorted.length === 0) return 0;
+  let best = 1, current = 1;
+  for (let i = 1; i < sorted.length; i++) {
+    const diff =
+      (new Date(sorted[i] + "T00:00:00Z").getTime() -
+        new Date(sorted[i - 1] + "T00:00:00Z").getTime()) /
+      86400000;
+    if (diff === 1) { current++; best = Math.max(best, current); }
+    else current = 1;
+  }
+  return best;
+}
+
+function buildDayOfWeekData(
+  checkInSet: Set<string>,
+  startDate: string,
+  todayJST: string
+): DayOfWeekStat[] {
+  const DAY_NAMES = ["月", "火", "水", "木", "金", "土", "日"];
+  const counts = Array(7).fill(0);
+  const totals = Array(7).fill(0);
+  const start = parseISO(startDate);
+  const end = parseISO(todayJST);
+  const days = differenceInDays(end, start) + 1;
+  for (let i = 0; i < days; i++) {
+    const date = format(addDays(start, i), "yyyy-MM-dd");
+    const dow = new Date(date + "T00:00:00Z").getUTCDay();
+    const idx = dow === 0 ? 6 : dow - 1;
+    totals[idx]++;
+    if (checkInSet.has(date)) counts[idx]++;
+  }
+  return DAY_NAMES.map((day, i) => ({
+    day,
+    pct: totals[i] > 0 ? Math.round((counts[i] / totals[i]) * 100) : 0,
+    count: counts[i],
+    total: totals[i],
+  }));
+}
+
 function buildStats(
   checkInDates: string[],
   habit: Habit,
@@ -147,6 +191,7 @@ function buildStats(
 ): HabitStats {
   const checkInSet = new Set(checkInDates);
   const streak = getStreak(habit, checkInDates, todayJST);
+  const bestStreak = buildBestStreak(checkInDates);
 
   // This week: Mon → today
   const todayDate = parseISO(todayJST);
@@ -179,7 +224,7 @@ function buildStats(
     Math.round((checkInDates.length / totalDays) * 100)
   );
 
-  return { streak, thisWeekPct, thisMonthPct, allTimePct };
+  return { streak, bestStreak, thisWeekPct, thisMonthPct, allTimePct };
 }
 
 // ── Section chrome ─────────────────────────────────────────────────────────────
@@ -232,6 +277,7 @@ export default async function HabitDetailPage({ params }: Props) {
   const heatmapWeeks = buildHeatmap(checkInSet, habit.target_per_week, todayJST);
   const goalBarData = buildGoalBarData(checkInSet, todayJST);
   const monthlyData = buildMonthlyData(checkInSet, todayJST);
+  const dayOfWeekData = buildDayOfWeekData(checkInSet, startDate, todayJST);
   const notes: NoteEntry[] = (rawCheckIns ?? [])
     .filter((ci): ci is { date: string; note: string } => ci.note !== null && ci.note.trim() !== "")
     .slice(0, 20);
@@ -254,7 +300,7 @@ export default async function HabitDetailPage({ params }: Props) {
         <SectionLabel num="01" label="THE PATTERN" />
         <SectionTitle>過去1年の<em>軌跡</em></SectionTitle>
         <div className="rounded-md bg-card border border-border p-4 shadow-sm">
-          <YearHeatmap weeks={heatmapWeeks} />
+          <YearHeatmap weeks={heatmapWeeks} todayJST={todayJST} />
         </div>
       </section>
 
@@ -276,10 +322,19 @@ export default async function HabitDetailPage({ params }: Props) {
         </div>
       </section>
 
-      {/* 04 NOTES */}
+      {/* 04 BY WEEKDAY */}
+      <section>
+        <SectionLabel num="04" label="BY WEEKDAY" />
+        <SectionTitle>曜日別の<em>傾向</em></SectionTitle>
+        <div className="rounded-md bg-card border border-border p-4 shadow-sm">
+          <DayOfWeekChart data={dayOfWeekData} />
+        </div>
+      </section>
+
+      {/* 05 NOTES */}
       {notes.length > 0 && (
         <section>
-          <SectionLabel num="04" label="NOTES" />
+          <SectionLabel num="05" label="NOTES" />
           <SectionTitle>メモの<em>記録</em></SectionTitle>
           <div className="rounded-md bg-card border border-border shadow-sm divide-y divide-border">
             {notes.map((entry) => (

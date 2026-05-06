@@ -18,9 +18,11 @@ function RingCard({ label, percent }: RingCardProps) {
       <div className="relative">
         <ProgressRing percent={percent} size={64} strokeWidth={6} animated />
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className="font-mono text-xs font-medium tabular-nums text-primary">
-            {percent}
-          </span>
+          <AnimatedNumber
+            value={percent}
+            duration={0.8}
+            className="font-mono text-[11px] font-semibold tabular-nums text-primary"
+          />
         </div>
       </div>
       <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground text-center leading-tight">
@@ -30,9 +32,9 @@ function RingCard({ label, percent }: RingCardProps) {
   );
 }
 
-function StreakCard({ streak, unit }: { streak: number; unit: "日" | "週" }) {
+function StreakCard({ streak, bestStreak, unit }: { streak: number; bestStreak: number; unit: "日" | "週" }) {
   return (
-    <div className="rounded-md bg-primary/5 border border-primary/20 shadow-sm p-4 flex flex-col items-center gap-2 flex-1 min-w-0">
+    <div className="rounded-md bg-primary/5 border border-primary/20 shadow-sm p-4 flex flex-col items-center gap-1 flex-1 min-w-0">
       <AnimatedNumber
         value={streak}
         duration={0.8}
@@ -41,6 +43,11 @@ function StreakCard({ streak, unit }: { streak: number; unit: "日" | "週" }) {
       <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground text-center leading-tight">
         Streak ({unit})
       </span>
+      {bestStreak > streak && (
+        <span className="text-[9px] font-mono text-muted-foreground/60 tabular-nums mt-0.5">
+          最高 {bestStreak}{unit}
+        </span>
+      )}
     </div>
   );
 }
@@ -48,7 +55,7 @@ function StreakCard({ streak, unit }: { streak: number; unit: "日" | "週" }) {
 export function ScoreCards({ stats, streakUnit }: Props) {
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-      <StreakCard streak={stats.streak} unit={streakUnit} />
+      <StreakCard streak={stats.streak} bestStreak={stats.bestStreak} unit={streakUnit} />
       <RingCard label="This Week" percent={stats.thisWeekPct} />
       <RingCard label="This Month" percent={stats.thisMonthPct} />
       <RingCard label="All Time" percent={stats.allTimePct} />
