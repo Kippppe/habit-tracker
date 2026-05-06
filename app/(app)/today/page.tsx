@@ -1,19 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
-import { getTodayJST, getWeekDates } from "@/utils/date";
-import { HabitGrid } from "@/components/today/habit-grid";
+import { getTodayJST, shiftDate } from "@/utils/date";
+import { TodayDashboard } from "@/components/today/today-dashboard";
 
-interface Props {
-  searchParams: Promise<{ w?: string }>;
-}
-
-export default async function TodayPage({ searchParams }: Props) {
-  const { w } = await searchParams;
-  const weekOffset = Math.min(0, parseInt(w ?? "0", 10) || 0);
-
+export default async function TodayPage() {
   const todayJST = getTodayJST();
-  const days = getWeekDates(weekOffset, todayJST);
-  const startDate = days[0];
-  const endDate = days[6];
+  const since = shiftDate(todayJST, -364);
 
   const supabase = await createClient();
   const [{ data: habits }, { data: checkIns }] = await Promise.all([
@@ -25,17 +16,16 @@ export default async function TodayPage({ searchParams }: Props) {
     supabase
       .from("check_ins")
       .select("*")
-      .gte("date", startDate)
-      .lte("date", endDate),
+      .gte("date", since)
+      .lte("date", todayJST),
   ]);
 
   return (
-    <HabitGrid
+    <TodayDashboard
       habits={habits ?? []}
       initialCheckIns={checkIns ?? []}
-      days={days}
       todayJST={todayJST}
-      weekOffset={weekOffset}
+      since={since}
     />
   );
 }
