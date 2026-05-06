@@ -3,7 +3,10 @@
 import { useState } from "react";
 import { ChevronUp, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { HabitStat, Summary } from "@/app/(app)/stats/page";
+import type { HabitStat } from "@/app/(app)/stats/page";
+
+// Legacy component — page now uses StatsDashboard. Kept for reference.
+interface Summary { activeCount: number; thisWeekOverallPct: number; totalCheckIns: number; }
 
 // ── Summary cards ─────────────────────────────────────────────────────────────
 
