@@ -1,6 +1,7 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
+import { PAPER_SETTLE, DURATION } from "@/lib/motion";
 
 interface Props {
   percent: number;
@@ -39,7 +40,7 @@ export function ProgressRing({ percent, size = 64, strokeWidth = 6, animated = t
         transition={
           prefersReducedMotion || !animated
             ? { duration: 0 }
-            : { duration: 1.2, ease: "easeOut" }
+            : { duration: DURATION.ring, ease: PAPER_SETTLE }
         }
         transform={`rotate(-90 ${cx} ${cx})`}
       />

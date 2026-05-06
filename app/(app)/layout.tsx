@@ -2,6 +2,7 @@ import Link from "next/link";
 import { CalendarDays, ListChecks, BarChart3 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LogoHorizontal } from "@/components/brand/logo";
+import { PageWrapper } from "@/components/motion/page-wrapper";
 
 const NAV_ITEMS = [
   { href: "/today", label: "今日", icon: CalendarDays },
@@ -19,7 +20,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
       </header>
       <main className="flex-1 w-full max-w-3xl mx-auto px-4 pb-24">
-        {children}
+        <PageWrapper>{children}</PageWrapper>
       </main>
       <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card/95 backdrop-blur-sm">
         <div className="flex items-center justify-around max-w-3xl mx-auto h-16">

@@ -3,6 +3,8 @@
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Flame } from "lucide-react";
 import { Hanko } from "@/components/brand/hanko";
+import { AnimatedNumber } from "@/components/motion/animated-number";
+import { PAPER_SETTLE, DURATION } from "@/lib/motion";
 
 interface Props {
   checked: number;
@@ -42,7 +44,7 @@ export function TodayHeroCard({ checked, total, overallStreak }: Props) {
             strokeDasharray={CIRC}
             initial={{ strokeDashoffset: CIRC }}
             animate={{ strokeDashoffset: dashOffset }}
-            transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.9, ease: "easeOut" }}
+            transition={prefersReducedMotion ? { duration: 0 } : { duration: DURATION.ring, ease: PAPER_SETTLE }}
             transform="rotate(-90 120 120)"
           />
         </svg>
@@ -68,12 +70,12 @@ export function TodayHeroCard({ checked, total, overallStreak }: Props) {
                 className="flex flex-col items-center gap-1"
               >
                 <div className="font-serif leading-none flex items-baseline gap-0.5">
-                  <span
+                  <AnimatedNumber
+                    value={checked}
+                    duration={DURATION.hero}
                     className="tabular-nums text-primary"
                     style={{ fontSize: "clamp(40px, 8vw, 56px)" }}
-                  >
-                    {checked}
-                  </span>
+                  />
                   <span
                     className="tabular-nums text-foreground/25"
                     style={{ fontSize: "clamp(22px, 4vw, 32px)" }}

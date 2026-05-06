@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { TAP_SPRING, DURATION } from "@/lib/motion";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { shiftDate, getDayHeader } from "@/utils/date";
@@ -42,7 +43,8 @@ function DayCell({ habitId, habitName, date, checked, isFuture, onToggle }: DayC
 
   return (
     <motion.button
-      whileTap={prefersReducedMotion ? {} : { scale: 0.85 }}
+      whileTap={prefersReducedMotion ? {} : { scale: 0.92 }}
+      transition={TAP_SPRING}
       onClick={() => onToggle(habitId, date, checked)}
       aria-label={`${habitName} - ${date} - ${checked ? "完了" : "未完了"}`}
       aria-pressed={checked}
@@ -60,7 +62,7 @@ function DayCell({ habitId, habitName, date, checked, isFuture, onToggle }: DayC
             initial={prefersReducedMotion ? false : { scale: 0.3, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={prefersReducedMotion ? {} : { scale: 0.3, opacity: 0 }}
-            transition={{ duration: prefersReducedMotion ? 0 : 0.12 }}
+            transition={{ duration: prefersReducedMotion ? 0 : DURATION.micro }}
           >
             <Check size={10} strokeWidth={3} />
           </motion.div>

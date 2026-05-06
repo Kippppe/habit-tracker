@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ChevronUp, ChevronDown } from "lucide-react";
+import { AnimatedNumber } from "@/components/motion/animated-number";
 import { cn } from "@/lib/utils";
 import { ProgressRing } from "@/components/charts/progress-ring";
 import { DonutChart } from "@/components/charts/donut-chart";
@@ -47,12 +48,12 @@ function HeroSection({ hero }: { hero: HeroData }) {
         <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground mb-4">
           Active habits
         </p>
-        <span
+        <AnimatedNumber
+          value={hero.activeCount}
+          duration={0.8}
           className="font-serif text-primary leading-none tabular-nums"
           style={{ fontSize: "clamp(52px, 10vw, 72px)" }}
-        >
-          {hero.activeCount}
-        </span>
+        />
       </div>
 
       {/* This week's score */}
@@ -76,12 +77,12 @@ function HeroSection({ hero }: { hero: HeroData }) {
           Days tracked
         </p>
         <div>
-          <span
+          <AnimatedNumber
+            value={hero.daysTracked}
+            duration={1.0}
             className="font-serif text-primary leading-none tabular-nums block"
             style={{ fontSize: "clamp(52px, 10vw, 72px)" }}
-          >
-            {hero.daysTracked}
-          </span>
+          />
           <p className="text-xs text-muted-foreground mt-1 tabular-nums">
             since {startYear}年{startMonth}月{startDay}日
           </p>
