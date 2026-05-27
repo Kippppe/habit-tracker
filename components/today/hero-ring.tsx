@@ -10,13 +10,14 @@ interface Props {
   checked: number;
   total: number;
   streak: number;
+  bestStreak: number;
 }
 
 const RADIUS = 108;
 const STROKE = 12;
 const CIRC = 2 * Math.PI * RADIUS;
 
-export function HeroRing({ checked, total, streak }: Props) {
+export function HeroRing({ checked, total, streak, bestStreak }: Props) {
   const prefersReducedMotion = useReducedMotion();
   const pct = total > 0 ? checked / total : 0;
   const dashOffset = CIRC * (1 - pct);
@@ -88,7 +89,7 @@ export function HeroRing({ checked, total, streak }: Props) {
                   <AnimatedNumber
                     value={checked}
                     duration={DURATION.hero}
-                    className="tabular-nums text-primary"
+                    className={`tabular-nums ${checked === 0 ? "text-foreground/30" : "text-primary"}`}
                     style={{ fontSize: "clamp(48px, 10vw, 72px)" }}
                   />
                   <span
@@ -107,7 +108,7 @@ export function HeroRing({ checked, total, streak }: Props) {
         </div>
       </div>
 
-      {streak > 0 && (
+      {streak > 0 ? (
         <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/8 border border-primary/20">
           <Flame size={13} className="text-primary" />
           <span className="font-mono tabular-nums text-sm font-medium text-primary">
@@ -115,7 +116,15 @@ export function HeroRing({ checked, total, streak }: Props) {
           </span>
           <span className="text-xs text-muted-foreground">日連続</span>
         </div>
-      )}
+      ) : bestStreak > 0 ? (
+        <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/8 border border-primary/20">
+          <span className="text-[11px] text-muted-foreground">これまでの最高</span>
+          <span className="font-serif tabular-nums text-lg leading-none font-medium text-primary">
+            {bestStreak}
+          </span>
+          <span className="text-xs text-muted-foreground">日連続</span>
+        </div>
+      ) : null}
     </div>
   );
 }

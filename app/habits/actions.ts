@@ -44,7 +44,7 @@ export async function archiveHabit(id: string) {
   const { supabase, user } = await getAuthUser();
   const { error } = await supabase
     .from("habits")
-    .update({ archived_at: new Date().toISOString() })
+    .update({ status: "archived", archived_at: new Date().toISOString() })
     .eq("id", id)
     .eq("user_id", user.id);
   if (error) throw error;
@@ -55,7 +55,7 @@ export async function restoreHabit(id: string) {
   const { supabase, user } = await getAuthUser();
   const { error } = await supabase
     .from("habits")
-    .update({ archived_at: null })
+    .update({ status: "active", archived_at: null })
     .eq("id", id)
     .eq("user_id", user.id);
   if (error) throw error;

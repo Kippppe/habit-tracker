@@ -71,7 +71,7 @@ export async function upsertCheckIn(
       .eq("habit_id", habitId)
       .gte("date", shiftDate(date, -365))
       .lte("date", date),
-    supabase.from("habits").select("id").is("archived_at", null),
+    supabase.from("habits").select("id").eq("status", "active"),
     supabase.from("check_ins").select("habit_id", { head: false }).eq("date", date),
   ]);
 
@@ -99,8 +99,11 @@ export async function upsertCheckIn(
   }
 
   // 4. Check day complete (all active habits done today)
-  const habitCount = allHabits?.length ?? 0;
-  const todayDone = todayCheckIns?.length ?? 0;
+  const activeIdSet = new Set((allHabits ?? []).map((h: { id: string }) => h.id));
+  const habitCount = activeIdSet.size;
+  const todayDone = (todayCheckIns ?? []).filter(
+    (ci: { habit_id: string }) => activeIdSet.has(ci.habit_id)
+  ).length;
   if (habitCount > 0 && todayDone >= habitCount) {
     const recorded = await tryRecordMilestone(supabase, user.id, null, "day_complete", date);
     if (recorded) return { achievement: { kind: "day_complete" } };
@@ -112,7 +115,8 @@ export async function upsertCheckIn(
     .from("check_ins")
     .select("id", { head: false, count: "exact" })
     .gte("date", monthStart)
-    .lte("date", date);
+    .lte("date", date)
+    .in("habit_id", Array.from(activeIdSet));
 
   const dayOfMonth = parseInt(date.slice(8, 10), 10);
   const expectedMonthly = habitCount * dayOfMonth;

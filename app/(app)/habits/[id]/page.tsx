@@ -14,7 +14,8 @@ import { getStreak } from "@/utils/streak";
 import { HabitHeader } from "@/components/habits/detail/habit-header";
 import { ScoreCards } from "@/components/habits/detail/score-cards";
 import { YearHeatmap } from "@/components/habits/detail/year-heatmap";
-import { GoalBarChart } from "@/components/charts/goal-bar-chart";
+import { Last30DaysChart } from "@/components/habits/detail/last30-days-chart";
+import { DetailCheckIn } from "@/components/habits/detail/detail-check-in";
 import { MonthlyChart } from "@/components/habits/detail/monthly-chart";
 import { DayOfWeekChart } from "@/components/habits/detail/day-of-week-chart";
 import type { Habit } from "@/lib/types/database";
@@ -100,16 +101,15 @@ function buildHeatmap(
   });
 }
 
-function buildGoalBarData(
+function buildRecentDays(
   checkInSet: Set<string>,
   todayJST: string
-) {
+): ChartPoint[] {
   return Array.from({ length: 30 }, (_, i) => {
     const date = shiftDate(todayJST, -(29 - i));
     const m = parseInt(date.slice(5, 7), 10);
     const d = parseInt(date.slice(8, 10), 10);
-    const checked = checkInSet.has(date);
-    return { date, displayDate: `${m}/${d}`, value: checked ? 1 : 0, checked };
+    return { date, displayDate: `${m}/${d}`, checked: checkInSet.has(date) };
   });
 }
 
@@ -275,14 +275,25 @@ export default async function HabitDetailPage({ params }: Props) {
 
   const stats = buildStats(checkInDates, habit, todayJST);
   const heatmapWeeks = buildHeatmap(checkInSet, habit.target_per_week, todayJST);
-  const goalBarData = buildGoalBarData(checkInSet, todayJST);
+  const recentDays = buildRecentDays(checkInSet, todayJST);
+  const recordDays = Array.from({ length: 7 }, (_, i) => {
+    const date = shiftDate(todayJST, -(6 - i));
+    const dow = ["日", "月", "火", "水", "木", "金", "土"][
+      new Date(date + "T00:00:00Z").getUTCDay()
+    ];
+    return {
+      date,
+      dow,
+      dayNum: parseInt(date.slice(8, 10), 10),
+      checked: checkInSet.has(date),
+      isToday: date === todayJST,
+    };
+  });
   const monthlyData = buildMonthlyData(checkInSet, todayJST);
   const dayOfWeekData = buildDayOfWeekData(checkInSet, startDate, todayJST);
   const notes: NoteEntry[] = (rawCheckIns ?? [])
     .filter((ci): ci is { date: string; note: string } => ci.note !== null && ci.note.trim() !== "")
     .slice(0, 20);
-
-  const goalLine = habit.target_per_week / 7;
 
   return (
     <div className="py-6 space-y-10">
@@ -294,6 +305,15 @@ export default async function HabitDetailPage({ params }: Props) {
         stats={stats}
         streakUnit={habit.target_per_week === 7 ? "日" : "週"}
       />
+
+      {/* 00 RECORD */}
+      <section>
+        <SectionLabel num="00" label="RECORD" />
+        <SectionTitle>直近7日を<em>記録</em></SectionTitle>
+        <div className="rounded-md bg-card border border-border p-4 shadow-sm">
+          <DetailCheckIn habitId={habit.id} days={recordDays} />
+        </div>
+      </section>
 
       {/* 01 THE PATTERN */}
       <section>
@@ -309,7 +329,7 @@ export default async function HabitDetailPage({ params }: Props) {
         <SectionLabel num="02" label="RECENT" />
         <SectionTitle>直近30日の<em>記録</em></SectionTitle>
         <div className="rounded-md bg-card border border-border p-4 shadow-sm">
-          <GoalBarChart data={goalBarData} goalLine={goalLine} height={120} />
+          <Last30DaysChart data={recentDays} />
         </div>
       </section>
 

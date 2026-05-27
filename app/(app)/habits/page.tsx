@@ -11,13 +11,12 @@ export default async function HabitsPage() {
     .select("*")
     .order("created_at", { ascending: true });
 
-  const active = habits?.filter((h) => !h.archived_at) ?? [];
-  const archived = habits?.filter((h) => h.archived_at) ?? [];
+  const all = habits ?? [];
+  const active = all.filter((h) => h.status !== "archived");
+  const archived = all.filter((h) => h.status === "archived");
 
   // Group active habits by category
-  const categories = Array.from(
-    new Set(active.map((h) => h.category ?? ""))
-  );
+  const categories = Array.from(new Set(active.map((h) => h.category ?? "")));
 
   return (
     <div className="py-8 space-y-6">
@@ -33,7 +32,7 @@ export default async function HabitsPage() {
         />
       </div>
 
-      {active.length === 0 && (
+      {active.length === 0 && archived.length === 0 && (
         <p className="text-muted-foreground text-sm py-8 text-center">
           まだ習慣がありません。「追加」から始めましょう。
         </p>
@@ -41,6 +40,7 @@ export default async function HabitsPage() {
 
       {categories.map((cat) => {
         const group = active.filter((h) => (h.category ?? "") === cat);
+        if (group.length === 0) return null;
         return (
           <section key={cat} className="space-y-2">
             {cat && (
@@ -61,7 +61,7 @@ export default async function HabitsPage() {
             アーカイブ済み
           </h2>
           {archived.map((habit) => (
-            <HabitCard key={habit.id} habit={habit} archived />
+            <HabitCard key={habit.id} habit={habit} />
           ))}
         </section>
       )}

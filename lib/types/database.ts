@@ -6,6 +6,8 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[];
 
+export type HabitStatus = "active" | "observing" | "archived";
+
 export interface Database {
   public: {
     Tables: {
@@ -20,6 +22,8 @@ export interface Database {
           color: string | null;
           created_at: string;
           archived_at: string | null;
+          remind_at: string | null;
+          status: HabitStatus;
         };
         Insert: {
           id?: string;
@@ -31,6 +35,8 @@ export interface Database {
           color?: string | null;
           created_at?: string;
           archived_at?: string | null;
+          remind_at?: string | null;
+          status?: HabitStatus;
         };
         Update: {
           id?: string;
@@ -42,6 +48,8 @@ export interface Database {
           color?: string | null;
           created_at?: string;
           archived_at?: string | null;
+          remind_at?: string | null;
+          status?: HabitStatus;
         };
         Relationships: [];
       };

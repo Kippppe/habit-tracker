@@ -26,18 +26,16 @@ const DIFFICULTY_LABEL: Record<number, string> = {
 
 interface Props {
   habit: Habit;
-  archived?: boolean;
 }
 
-export function HabitCard({ habit, archived = false }: Props) {
+export function HabitCard({ habit }: Props) {
   const [isPending, startTransition] = useTransition();
+  const archived = habit.status === "archived";
 
-  function handleArchive() {
-    startTransition(() => archiveHabit(habit.id));
-  }
-
-  function handleRestore() {
-    startTransition(() => restoreHabit(habit.id));
+  function run(fn: () => Promise<unknown>) {
+    startTransition(async () => {
+      await fn();
+    });
   }
 
   return (
@@ -72,7 +70,7 @@ export function HabitCard({ habit, archived = false }: Props) {
             variant="ghost"
             size="icon"
             className="h-8 w-8 rounded text-muted-foreground hover:text-foreground"
-            onClick={handleRestore}
+            onClick={() => run(() => restoreHabit(habit.id))}
             disabled={isPending}
             aria-label="復元"
           >
@@ -97,7 +95,7 @@ export function HabitCard({ habit, archived = false }: Props) {
               variant="ghost"
               size="icon"
               className="h-8 w-8 rounded text-muted-foreground hover:text-foreground"
-              onClick={handleArchive}
+              onClick={() => run(() => archiveHabit(habit.id))}
               disabled={isPending}
               aria-label="アーカイブ"
             >

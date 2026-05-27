@@ -172,3 +172,13 @@ Delete unused components (confirmed no live imports):
 ## Notes / constraints
 - Per `AGENTS.md`: this is a modified Next.js — read `node_modules/next/dist/docs/` before writing code; heed deprecation notices.
 - Apply `react-best-practices` / `nextjs` skills during implementation (auto-suggested by repo hooks).
+
+## Revision — 2026-05-27 (post-implementation pivot)
+
+User feedback during implementation changed item 3:
+- **No 3-habit limit.** The habits are intentional; the issue was consistency, not count. The soft cap, auto-demote-on-create, and the active/observation split were **removed**. All non-archived habits are active.
+- **`status` column retained** (values `active`/`archived` in use; `observing` defined but unused). Queries (`/today` `.eq("status","active")`, `/stats` `.neq("status","archived")`) are equivalent to the old `archived_at IS NULL` and kept.
+- **/habits** is back to two sections (active grouped by category + archived) — no observation section/toggle.
+- **Detail-page "直近7日 record" control (`DetailCheckIn`) retained** — a general quick-logging tool, independent of the removed split.
+- **3 habits archived** (reversible, not hard-deleted): Shift-app を読む, 本を30分読む, 犬の散歩.
+- Items 2 (chart fix), 4 (0-state suppression), 5 (stats slim + /today category removal) are unchanged and shipped.

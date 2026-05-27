@@ -8,7 +8,6 @@ import { shiftDate } from "@/utils/date";
 import { HeroRing } from "./hero-ring";
 import { HabitGridV2 } from "./habit-grid-v2";
 import { StatCards } from "./stat-cards";
-import { CategoryCards } from "./category-cards";
 import { AchievementOverlay } from "./achievement-overlay";
 import type { Habit, CheckIn } from "@/lib/types/database";
 import type { Achievement } from "@/lib/types/achievements";
@@ -49,20 +48,18 @@ function getWeekDaysSoFar(today: string): string[] {
   );
 }
 
-function deriveOverallStreak(checkInSet: Set<string>, today: string): number {
-  const dates = new Set<string>();
-  checkInSet.forEach(key => dates.add(key.slice(-10)));
+function deriveOverallStreak(doneDates: Set<string>, today: string): number {
   const yesterday = shiftDate(today, -1);
-  const start = dates.has(today) ? today : dates.has(yesterday) ? yesterday : null;
+  const start = doneDates.has(today) ? today : doneDates.has(yesterday) ? yesterday : null;
   if (!start) return 0;
   let count = 0;
   let d = start;
-  while (dates.has(d)) { count++; d = shiftDate(d, -1); }
+  while (doneDates.has(d)) { count++; d = shiftDate(d, -1); }
   return count;
 }
 
-function deriveBestStreak(checkInSet: Set<string>): number {
-  const dates = Array.from(new Set(Array.from(checkInSet).map(k => k.slice(-10)))).sort();
+function deriveBestStreak(doneDates: Set<string>): number {
+  const dates = Array.from(doneDates).sort();
   if (dates.length === 0) return 0;
   let best = 1, current = 1;
   for (let i = 1; i < dates.length; i++) {
@@ -114,33 +111,6 @@ function deriveSparkline(habits: Habit[], checkInSet: Set<string>, today: string
   });
 }
 
-function deriveCategoryStats(habits: Habit[], checkInSet: Set<string>, today: string) {
-  const weekDays = getWeekDaysSoFar(today);
-  const map = new Map<string, Habit[]>();
-  habits.forEach(h => {
-    const cat = h.category ?? "";
-    if (!map.has(cat)) map.set(cat, []);
-    map.get(cat)!.push(h);
-  });
-  return Array.from(map.entries()).map(([category, catHabits]) => {
-    const done = catHabits.filter(h => checkInSet.has(`${h.id}:${today}`)).length;
-    const weekTotal = weekDays.length * catHabits.length;
-    const weekDone = weekDays.reduce(
-      (acc, d) =>
-        acc + catHabits.filter(h => checkInSet.has(`${h.id}:${d}`)).length,
-      0
-    );
-    return {
-      category,
-      done,
-      total: catHabits.length,
-      pct: catHabits.length > 0 ? Math.round((done / catHabits.length) * 100) : 0,
-      weekPct: weekTotal > 0 ? Math.round((weekDone / weekTotal) * 100) : 0,
-      color: catHabits[0]?.color ?? "#8b2820",
-    };
-  });
-}
-
 // ── Component ─────────────────────────────────────────────────────────────────
 
 interface Props {
@@ -175,6 +145,14 @@ export function TodayDashboard({ habits, initialCheckIns, todayJST, since }: Pro
     [checkIns]
   );
 
+  // Streaks count days with ≥1 active-habit check-in (archived habits excluded).
+  const activeDoneDates = useMemo(() => {
+    const ids = new Set(habits.map(h => h.id));
+    const dates = new Set<string>();
+    for (const ci of checkIns) if (ids.has(ci.habit_id)) dates.add(ci.date);
+    return dates;
+  }, [habits, checkIns]);
+
   const todayChecked = useMemo(
     () => habits.filter(h => checkInSet.has(`${h.id}:${todayJST}`)).length,
     [habits, checkInSet, todayJST]
@@ -183,10 +161,10 @@ export function TodayDashboard({ habits, initialCheckIns, todayJST, since }: Pro
   const todayPct = habits.length > 0 ? Math.round((todayChecked / habits.length) * 100) : 0;
 
   const streak = useMemo(
-    () => deriveOverallStreak(checkInSet, todayJST),
-    [checkInSet, todayJST]
+    () => deriveOverallStreak(activeDoneDates, todayJST),
+    [activeDoneDates, todayJST]
   );
-  const bestStreak = useMemo(() => deriveBestStreak(checkInSet), [checkInSet]);
+  const bestStreak = useMemo(() => deriveBestStreak(activeDoneDates), [activeDoneDates]);
   const thisWeekPct = useMemo(
     () => deriveThisWeekPct(habits, checkInSet, todayJST),
     [habits, checkInSet, todayJST]
@@ -197,10 +175,6 @@ export function TodayDashboard({ habits, initialCheckIns, todayJST, since }: Pro
   );
   const sparklineData = useMemo(
     () => deriveSparkline(habits, checkInSet, todayJST),
-    [habits, checkInSet, todayJST]
-  );
-  const categoryStats = useMemo(
-    () => deriveCategoryStats(habits, checkInSet, todayJST),
     [habits, checkInSet, todayJST]
   );
   const dayName = getDayNameJP(todayJST);
@@ -265,7 +239,7 @@ export function TodayDashboard({ habits, initialCheckIns, todayJST, since }: Pro
           <SectionTitle>
             <em>{dayName}</em>の記録
           </SectionTitle>
-          <HeroRing checked={todayChecked} total={habits.length} streak={streak} />
+          <HeroRing checked={todayChecked} total={habits.length} streak={streak} bestStreak={bestStreak} />
         </section>
 
         {habits.length > 0 && (
@@ -302,16 +276,6 @@ export function TodayDashboard({ habits, initialCheckIns, todayJST, since }: Pro
               />
             </section>
 
-            {/* 04 BY CATEGORY */}
-            {categoryStats.length > 0 && (
-              <section>
-                <SectionLabel num="04" label="BY CATEGORY" />
-                <SectionTitle>
-                  カテゴリ別の<em>状況</em>
-                </SectionTitle>
-                <CategoryCards stats={categoryStats} />
-              </section>
-            )}
           </>
         )}
       </div>

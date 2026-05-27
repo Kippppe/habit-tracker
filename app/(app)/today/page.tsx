@@ -11,7 +11,7 @@ export default async function TodayPage() {
     supabase
       .from("habits")
       .select("*")
-      .is("archived_at", null)
+      .eq("status", "active")
       .order("created_at", { ascending: true }),
     supabase
       .from("check_ins")

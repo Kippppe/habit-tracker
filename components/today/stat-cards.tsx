@@ -85,19 +85,42 @@ export function StatCards({
 
       {/* Streak */}
       <CardShell label="Streak" icon={<Flame size={13} />}>
-        <div>
-          <div className="flex items-baseline gap-1">
-            <AnimatedNumber
-              value={streak}
-              duration={0.8}
-              className="font-serif text-3xl leading-none text-primary tabular-nums"
-            />
-            <span className="text-xs text-muted-foreground">日</span>
+        {streak > 0 ? (
+          <div>
+            <div className="flex items-baseline gap-1">
+              <AnimatedNumber
+                value={streak}
+                duration={0.8}
+                className="font-serif text-3xl leading-none text-primary tabular-nums"
+              />
+              <span className="text-xs text-muted-foreground">日</span>
+            </div>
+            <div className="text-[10px] text-muted-foreground mt-1 tabular-nums">
+              最長 {bestStreak}日
+            </div>
           </div>
-          <div className="text-[10px] text-muted-foreground mt-1 tabular-nums">
-            最長 {bestStreak}日
+        ) : bestStreak > 0 ? (
+          <div>
+            <div className="flex items-baseline gap-1">
+              <AnimatedNumber
+                value={bestStreak}
+                duration={0.8}
+                className="font-serif text-3xl leading-none text-primary tabular-nums"
+              />
+              <span className="text-xs text-muted-foreground">日</span>
+            </div>
+            <div className="text-[10px] text-muted-foreground mt-1 tabular-nums">
+              最高記録 · 現在 0日
+            </div>
           </div>
-        </div>
+        ) : (
+          <div>
+            <div className="font-serif text-3xl leading-none text-muted-foreground/40">
+              —
+            </div>
+            <div className="text-[10px] text-muted-foreground mt-1">まだ記録なし</div>
+          </div>
+        )}
       </CardShell>
 
       {/* This Week */}
